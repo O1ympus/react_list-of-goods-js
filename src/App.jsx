@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import classNames from 'classnames';
 import 'bulma/css/bulma.css';
 import './App.scss';
 
@@ -18,89 +17,91 @@ export const goodsFromServer = [
 
 const FIELD_ALPHABETIC = 'alphabetically';
 const FIELD_LENGTH = 'length';
-const FIELD_REVERSE = 'reverse';
-const FIELD_RESET = 'reset';
-
-function sortJSON(sortType, arr) {
-  switch (sortType) {
-    case FIELD_LENGTH:
-      return [...arr].sort((a, b) => a.length - b.length);
-    case FIELD_ALPHABETIC:
-      return [...arr].sort((a, b) => a.localeCompare(b));
-    default:
-      return arr;
-  }
-}
 
 export const App = () => {
-  const [sortType, setFieldName] = useState('');
-  const [products, setProducts] = useState([...goodsFromServer]);
+  const [goods, setGoods] = useState(goodsFromServer);
+  const [sortBy, setSortBy] = useState(null);
   const [isReversed, setIsReversed] = useState(false);
 
-  const visibleGoods = isReversed ? [...products].reverse() : products;
+  const getSortedGoods = (orderBy, reverse = false) => {
+    const sorted = [...goodsFromServer];
 
-  function handleSort(field) {
-    if (field === FIELD_REVERSE) {
-      setIsReversed(prev => !prev);
-
-      return;
+    if (orderBy === FIELD_ALPHABETIC) {
+      sorted.sort((a, b) => a.localeCompare(b));
+    } else if (orderBy === FIELD_LENGTH) {
+      sorted.sort((a, b) => a.length - b.length);
     }
 
-    if (field === FIELD_RESET) {
-      setProducts([...goodsFromServer]);
-      setFieldName('');
-      setIsReversed(false);
-
-      return;
+    if (reverse) {
+      sorted.reverse();
     }
 
-    const sorted = sortJSON(field, goodsFromServer);
+    return sorted;
+  };
 
-    setFieldName(field);
-    setProducts(sorted);
+  const handleSortAlphabetically = () => {
+    const sorted = getSortedGoods(FIELD_ALPHABETIC, isReversed);
+
+    setGoods(sorted);
+    setSortBy(FIELD_ALPHABETIC);
+  };
+
+  const handleSortByLength = () => {
+    const sorted = getSortedGoods(FIELD_LENGTH, isReversed);
+
+    setGoods(sorted);
+    setSortBy(FIELD_LENGTH);
+  };
+
+  const handleReverse = () => {
+    const reversed = [...goods].reverse();
+
+    setGoods(reversed);
+    setIsReversed(prev => !prev);
+  };
+
+  const handleReset = () => {
+    setGoods(goodsFromServer);
+    setSortBy(null);
     setIsReversed(false);
-  }
+  };
+
+  const isInitial =
+    goods.every((item, index) => item === goodsFromServer[index]) &&
+    !isReversed;
 
   return (
     <div className="section content">
       <div className="buttons">
         <button
           type="button"
-          className={classNames('button', 'is-info', {
-            'is-light': sortType !== FIELD_ALPHABETIC,
-          })}
-          onClick={() => handleSort(FIELD_ALPHABETIC)}
+          className={`button is-info ${sortBy !== FIELD_ALPHABETIC ? 'is-light' : ''}`}
+          onClick={handleSortAlphabetically}
         >
           Sort alphabetically
         </button>
 
         <button
           type="button"
-          className={classNames('button', 'is-success', {
-            'is-light': sortType !== FIELD_LENGTH,
-          })}
-          onClick={() => handleSort(FIELD_LENGTH)}
+          className={`button is-success ${sortBy !== FIELD_LENGTH ? 'is-light' : ''}`}
+          onClick={handleSortByLength}
         >
           Sort by length
         </button>
 
         <button
           type="button"
-          className={classNames('button', 'is-warning', {
-            'is-light': !isReversed,
-          })}
-          onClick={() => handleSort(FIELD_REVERSE)}
+          className={`button is-warning ${!isReversed ? 'is-light' : ''}`}
+          onClick={handleReverse}
         >
           Reverse
         </button>
 
-        {visibleGoods.every((val, index) => val === goodsFromServer[index]) || (
+        {!isInitial && (
           <button
             type="button"
-            className={classNames('button', 'is-danger', {
-              'is-light': sortType !== FIELD_RESET,
-            })}
-            onClick={() => handleSort(FIELD_RESET)}
+            className="button is-danger"
+            onClick={handleReset}
           >
             Reset
           </button>
@@ -108,7 +109,7 @@ export const App = () => {
       </div>
 
       <ul>
-        {visibleGoods.map(good => (
+        {goods.map(good => (
           <li key={good} data-cy="Good">
             {good}
           </li>
