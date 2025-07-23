@@ -24,19 +24,24 @@ export const App = () => {
   const [isReversed, setIsReversed] = useState(false);
 
   const getSortedGoods = (orderBy, reverse = false) => {
-    const sorted = [...goodsFromServer];
+    const preparedGoods = [...goodsFromServer];
 
-    if (orderBy === FIELD_ALPHABETIC) {
-      sorted.sort((a, b) => a.localeCompare(b));
-    } else if (orderBy === FIELD_LENGTH) {
-      sorted.sort((a, b) => a.length - b.length);
+    switch (orderBy) {
+      case FIELD_ALPHABETIC:
+        preparedGoods.sort((a, b) => a.localeCompare(b));
+        break;
+      case FIELD_LENGTH:
+        preparedGoods.sort((a, b) => a.length - b.length);
+        break;
+      default:
+        break;
     }
 
     if (reverse) {
-      sorted.reverse();
+      preparedGoods.reverse();
     }
 
-    return sorted;
+    return preparedGoods;
   };
 
   const handleSortAlphabetically = () => {
